@@ -147,11 +147,13 @@ app.get("/xacnhan", (req, res) => {
 });
 
 // User - Look Up
-app.post("/UserLookUp", async (req, res) => {
+app.post("/UserLookUp",  (req, res) => {
   res.render("user/UserLookUp.ejs");
 });
 
-
+app.get("/UserLookUp",  (req, res) => {
+  res.render("user/UserLookUp.ejs");
+});
 
 app.listen(port, () => {
   console.log("listening on port " + port);
