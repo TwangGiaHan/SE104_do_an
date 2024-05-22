@@ -299,19 +299,28 @@ input {
 }
 /* BOOKING */
 .main-box {
-  width: 1303px;
-  height: 360px;
-  padding: 6px 18px 30px 0;
+  width: 80vw;
+  height: 50vh;
+  padding: 2vw 3vh 4vh 0;
   position: absolute;
-  left: 69px;
-  top: 202px;
+  left: calc(5vw + 69px); /* Use calc() for calculations */
+  margin-top: 10vh;
   background: linear-gradient(217deg, #FAD0C4 0%, #FFD1FF 100%);
   border-radius: 23px;
   overflow: hidden;
   display: flex;
-  gap: 44px;
+  gap: 4vw;
   align-items: center;
 }
+
+/* Media query for smaller screens */
+@media screen and (max-width: 768px) {
+  .main-box {
+    width: 90vw;
+    margin-top: 5vh;
+  }
+}
+
 .left-box, .right-box {
   width: 622px;
   height: 354px;
@@ -319,6 +328,15 @@ input {
   border-radius: 5px;
   overflow: hidden;
 }
+
+.Lbox {
+  width: 622px;
+  height: 354px;
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
 .input-group {
   width: 599px;
   position: absolute;
@@ -354,7 +372,7 @@ input {
   height: 43px;
   padding: 5px;
   left: 120px;
-  top: 622px;
+  top: 800px;
   position: absolute;
   background: #F25287;
   border-radius: 10px;
@@ -476,7 +494,7 @@ body {
   height: 43px;
   padding: 5px; 
   left: 115px; 
-  top: 962px; 
+  top: 1100px; 
   position: absolute; 
   background: #F25287; 
   border-radius: 10px; 
@@ -499,7 +517,7 @@ body {
 
 
 .XacNhanBtn {
-  margin-top: 20px;
+  margin-top: 1350px;
   padding: 10px 20px;
   background-color: #F25287;
   color: white;
@@ -543,4 +561,20 @@ body {
   top : 200px;
   background: #F25287; 
   border-radius: 10px
+}
+
+.table th, .table td {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  padding: 10px; /* Adjust padding as needed */
+}
+
+.table {
+  table-layout: auto; /* Allow automatic column width distribution */
+}
+
+.table th, .table td {
+  min-width: 170px; /* Minimum column width */
+  max-width: 250px; /* Maximum column width */
 }

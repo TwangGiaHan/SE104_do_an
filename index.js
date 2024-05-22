@@ -106,7 +106,7 @@ app.post("/booking", async (req, res) => {
   res.render("user/booking.ejs");
 });
 
-app.post("/themmonan", async (req, res) => {
+app.post("/themmonan", (req, res) => {
   res.render("user/themmonan.ejs");
 });
 
@@ -114,7 +114,7 @@ app.get("/themmonan", (req, res) => {
   res.render("user/themmonan.ejs");
 });
 
-app.post("/xoamonan", async (req, res) => {
+app.post("/xoamonan", (req, res) => {
   res.render("user/XoaMonAn.ejs");
 });
 
@@ -126,11 +126,23 @@ app.post("/themdichvu", async (req, res) => {
   res.render("user/themdichvu.ejs");
 });
 
-app.post("/xoadichvu", async (req, res) => {
+app.get("/themdichvu", (req, res) => {
+  res.render("user/themdichvu.ejs");
+});
+
+app.post("/xoadichvu", (req, res) => {
   res.render("user/xoadichvu.ejs");
 });
 
-app.post("/xacnhan", async (req, res) => {
+app.get("/xoadichvu", (req, res) => {
+  res.render("user/xoadichvu.ejs");
+});
+
+app.post("/xacnhan", (req, res) => {
+  res.render("user/XacNhanDatTiec.ejs");
+});
+
+app.get("/xacnhan", (req, res) => {
   res.render("user/XacNhanDatTiec.ejs");
 });
 
