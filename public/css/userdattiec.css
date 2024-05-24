@@ -257,7 +257,25 @@ input {
   border-radius: 23px;
 }
 
+.popup-content2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  /* align-content: center; */
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+  width: 450px;
+  height: 250px;
+  background: linear-gradient(217deg, #fad0c4 0%, #ffd1ff 100%);
+  border-radius: 23px;
+}
+
 .confirm {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -351,42 +369,6 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-.overlay {
-  display: none; 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(141, 141, 141, 0.8); 
-  z-index: 1;
-}
-
-.themmonan {
-  width: 715.63px;
-  height: 34.49px;
-  left: 234px;
-  top: 43px; 
-  position: absolute; 
-  text-align: center;
-  color: black;
-  font-size: 28px; 
-  font-family: Inter;
-  font-weight: 800; 
-  word-wrap: break-word
-}
-
-.thmngay {
-  position: absolute;
-  top: 16.30px;
-  left: calc(50% - 73.5px); /* Center the button text */
-  text-align: center;
-  color: white;
-  font-size: 24px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
-}
-
 .close-btn {
   position: absolute;
   top: 10px;
@@ -396,17 +378,6 @@ body {
   padding: 10px;
   border-radius: 50%;
   cursor: pointer;
-}
-
-
-.themdichvu {
-  width: 171px; 
-  text-align: center; 
-  color: white; 
-  font-size: 20px; 
-  font-family: Inter; 
-  font-weight: 800; 
-  word-wrap: break-word
 }
 
 .XacNhanBtn {
@@ -425,19 +396,6 @@ body {
   display: inline-flex;
   cursor: pointer;
 }
-
-.XacNhanBtn {
-  width: 184px;
-  height: 43px;
-  padding: 5px;
-  margin-bottom: 100px ;
-  padding: 10px 20px;
-  background-color: #F25287;
-  color: white;
-  border-radius: 10px;;
-  border-radius: 5px;
-  cursor: pointer;
-} */
 
 .popup {
   display: flex;
@@ -466,15 +424,6 @@ body {
   height: 550px;
   background: linear-gradient(217deg, #fad0c4 0%, #ffd1ff 100%);
   border-radius: 23px;
-}
-
-.themngay {
-  width: 1003.08px; 
-  height: 67.16px; 
-  top : 200px;
-  background: #F25287; 
-  border-radius: 10px;
-  cursor: pointer;
 }
 
 .table th, .table td {

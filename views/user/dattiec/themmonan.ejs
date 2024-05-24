@@ -138,8 +138,8 @@
             </tbody>
           </table>
         </div>
-        <form action="/dattiec" method="post" onsubmit="addToCart()" >
-          <button type="submit" style="background: #f25287; margin-top: 20px; border-radius: 10px; cursor: pointer; height: 50px; text-align: center;">
+        <form action="/dattiec" method="post" id="addToCartForm" onsubmit="addToCart()" >
+          <button type="submit" class = "confirm">
             <div class="TextInTheButton" >Thêm ngay</div>
           </button>
         </form>  
@@ -150,7 +150,7 @@
 <%- include("partials/footer.ejs") %>
 
 
-<script>
+<!-- <script>
   function addToCart() {
     // Khởi tạo mảng để lưu thông tin món ăn được chọn
     let selectedItems = [];
@@ -174,5 +174,40 @@
         });
       }
     });
+  }
+</script> -->
+
+<script>
+  function prepareData() {
+    // Khởi tạo mảng để lưu thông tin món ăn được chọn
+    let selectedItems = [];
+
+    // Lặp qua các ô input trong bảng món ăn
+    document.querySelectorAll('.tableMA tbody tr').forEach((row, index) => {
+      const checkbox = row.querySelector(`input[name="select_${index}"]`);
+      if (checkbox && checkbox.checked) {
+        const itemName = row.querySelector(`td:nth-child(2)`).textContent;
+        const itemPrice = parseFloat(row.querySelector(`td:nth-child(3)`).textContent);
+        const quantity = parseInt(row.querySelector(`input[name="quantity_${index}"]`).value);
+        const note = row.querySelector(`input[name="note_${index}"]`).value;
+
+        // Tạo một đối tượng chứa thông tin món ăn và đẩy vào mảng selectedItems
+        selectedItems.push({
+          id: checkbox.value,
+          name: itemName,
+          price: itemPrice,
+          quantity: quantity,
+          note: note,
+          totalPrice: itemPrice * quantity // Tính thành tiền
+        });
+      }
+    });
+
+    // Lưu dữ liệu vào một input hidden để gửi cùng form
+    const selectedItemsInput = document.createElement('input');
+    selectedItemsInput.type = 'hidden';
+    selectedItemsInput.name = 'selectedItems';
+    selectedItemsInput.value = JSON.stringify(selectedItems);
+    document.getElementById('addToCartForm').appendChild(selectedItemsInput);
   }
 </script>

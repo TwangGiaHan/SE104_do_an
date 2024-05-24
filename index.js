@@ -359,13 +359,29 @@ app.post("/createuser", async (req, res) => {
 });
 
 // user
+app.set('view engine', 'ejs');
+app.set('views', './views');
+
+app.get('/dattiec', (req, res) => {
+  const formData = req.session.formData || {};
+  const caOptions = req.session.caOptions || [];
+  const sanhOptions = req.session.sanhOptions || [];
+  const selectedItems = req.session.selectedItems || [];
+  const selectedItemsDV = req.session.selectedItemsDV || [];
+
+  res.render('user/dattiec/dattiec', {
+    formData: formData,
+    caOptions: caOptions,
+    sanhOptions: sanhOptions,
+    selectedItems: selectedItems,
+    selectedItemsDV: selectedItemsDV,
+    error: req.session.error || null
+  });
+});
+
 
 app.post("/userinfo", async (req, res) => {
   res.render("user/main.ejs");
-});
-
-app.post("/userxoamonan", async (req, res) => {
-  res.render("user/dattiec/XoaMonAn.ejs");
 });
 
 app.post("/userdichvu", async (req, res) => {
@@ -489,7 +505,7 @@ app.post("/dattiec", async (req, res) => {
   const tiendatdoc = req.body.deposit;
   const bandutru = req.body.tableCount;
   const thamso = req.body.parameter;
-  
+
   try {
     // Truy vấn lấy thông tin về ca
     const caResult = await db.query("SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'");
@@ -500,42 +516,45 @@ app.post("/dattiec", async (req, res) => {
     const sanhOptions = sanhResult.rows;
 
     // Tính toán thông tin món ăn
-    const selectedItems = req.body.selectedItems;
+    const selectedItems = req.body.selectedItems || [];
     selectedItems.forEach(item => {
       const quantity = parseInt(item.quantity);
       const unitPrice = parseFloat(item.itemPrice);
-      const totalPrice = quantity * tableQuantity * unitPrice;
-      item.totalPrice = totalPrice;
-    });
-    const selectedItemsDV = req.body.selectedItemsDV;
-    selectedItemsDV.forEach(item => {
-      const quantity = parseInt(item.quantity);
-      const unitPrice = parseFloat(item.itemPrice);
-      const totalPrice = quantity * tableQuantity * unitPrice;
+      const totalPrice = quantity  * unitPrice * (slban + bandutru);
       item.totalPrice = totalPrice;
     });
 
+    // Tính toán thông tin dịch vụ từ selectedItemsDV
+    const selectedItemsDV = req.body.selectedItemsDV || [];
+    selectedItemsDV.forEach(item => {
+      const quantityDV = parseInt(item.quantity);
+      const unitPriceDV = parseFloat(item.itemPrice);
+      const totalPriceDV = quantityDV * unitPriceDV * (slban + bandutru);
+      item.totalPriceDV = totalPriceDV;
+    });
+
     const ngayDatTiec = new Date(); // Ngày đặt tiệc là ngày hiện tại
-    if (ngayDaiTiec < ngayDatTiec || isNaN(tiendatdoc) || tiendatdoc < 0){
+    if (ngayDaiTiec < ngayDatTiec || isNaN(tiendatdoc) || tiendatdoc < 0) {
       return res.render("user/dattiec/dattiec.ejs", { 
         caOptions: caOptions, 
         sanhOptions: sanhOptions,
         error: "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc và tiền đặt cọc phải là một số dương"
       });
     }
+
     // Render màn hình đặt tiệc cưới và truyền các tùy chọn ca và sảnh
     res.render("user/dattiec/dattiec.ejs", { 
       caOptions: caOptions, 
       sanhOptions: sanhOptions,
       selectedItems: selectedItems,
-      selectedItemsDV: selectedItems
-
+      selectedItemsDV: selectedItemsDV
     });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
-  } 
+  }
 });
+
 
 app.post("/userthemmonan", async (req, res) => {
   try {
@@ -561,17 +580,16 @@ app.post("/userthemdichvu", async (req, res) => {
   }
 });
 
-app.post("/dattiec", async (req, res) => {
-  const selectedItems = req.body.selectedItems; // Nhận mảng selectedItems từ request POST
-  const selectedItemsDV = req.body.selectedItemsDV;
-  let totalPriceMA = 0;
-  let totalPriceDV = 0;
-  selectedItems.forEach(item => {
-    totalQuantity += item.quantity;
-    totalPriceMA += item.totalPrice;
-  });
-  res.render("user/dattiec/dattiec.ejs", { selectedItems: selectedItems });
+app.get("/userxoamonan", async (req, res) => {
+  res.render("user/dattiec/XoaMonAn.ejs");
 });
+
+app.post("/userxoamonan", async (req, res) => {
+  const mamonan = req.body.ItemId;
+  console.log(mamonan);
+  res.render("user/dattiec/XoaMonAn.ejs");
+});
+
 
 app.listen(port, () => {
   console.log("listening on port " + port);
