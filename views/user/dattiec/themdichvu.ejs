@@ -1,0 +1,182 @@
+<%- include("partials/header.ejs") %>
+<div class="container">
+  <%- include("partials/headerbar.ejs") %>
+  <div class="rest">
+    <div class="infobar">
+      <div class="textandinput">
+        <div>Tên chú rể</div>
+        <div>
+          <input class="enter" name="groomName " />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Ca</div>
+        <div>
+          <select class="enter" required>
+              <option value="" disabled selected hidden>Chọn ca</option>
+              <option value="loai1">Ca 1</option>
+              <option value="loai2">Ca 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Tên cô dâu</div>
+        <div>
+          <input class="enter" />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Sảnh</div>
+        <div>
+          <select class="enter" required>
+            <option value="" disabled selected hidden>Chọn sảnh</option>
+            <option value="loai1">Sảnh abc</option>
+            <option value="loai2">Sảnh xyz</option>
+          </select>
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Điện thoại</div>
+        <div>
+          <input 
+            class="enter" 
+            type="tel"
+            name="phone"
+          />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Tiền đặt cọc</div>
+        <div>
+          <input 
+            class="enter" 
+            type="number"
+            name="deposit"
+          />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Ngày đãi tiệc</div>
+        <div>
+          <input 
+            class="enter" 
+            type="date"
+            name="partyDate"
+          />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Số lượng bàn</div>
+        <div>
+          <input 
+            class="enter" 
+            type="number"
+            name="tableQuantity"
+          />
+        </div>
+      </div>
+      <div class="textandinput">
+        <div>Số bàn dự trữ</div>
+        <div>
+          <input 
+            class="enter" 
+            type="number"
+            name="tableCount"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Nút thêm món ăn -->
+    <form action="/userthemmonan" method="POST">
+      <button type="submit" class="AddBtnMonAn">
+        <div class="TextInTheButton">Thêm món ăn</div>
+      </button>
+    </form>
+
+    <form action="/userthemdichvu" method="POST">
+      <button type="submit" class="AddBtnDV">
+        <div class="TextInTheButton">Thêm dịch vụ</div>
+      </button>
+    </form>
+
+
+    <form action="/xacnhandattiec" method="POST">
+      <button type="submit" class="XacNhanBtn">
+        <div class="TextInTheButton">Đặt Tiệc</div>
+      </button>
+    </form>
+
+    <div class="popup">
+      <div class="popup-content">
+        <div class="firsttext">THÊM DỊCH VỤ</div>
+        <table class="tableMA" id="dv-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Tên dịch vụ</th>
+              <th>Đơn giá</th>
+              <th>Số lượng món</th>
+              <th>Ghi chú</th>
+              <th>Chọn</th>
+            </tr>
+          </thead>
+        </table>
+        <div style="height: 400px; overflow-y: scroll;">
+          <table class="tableMA"  id="dv-db-table">
+            <tbody>
+              <% for (let i = 0; i < dichvuOptions.length; i++) { %>
+                <tr>
+                  <td><%= i + 1 %></td>
+                  <td><%= dichvuOptions[i].tendichvu %></td>
+                  <td><%= dichvuOptions[i].dongia %></td>
+                  <td><input type="number" name="quantity_<%= i %>" min="1"></td>
+                  <td><input type="text" name="note_<%= i %>"></td>
+                  <td><input type="checkbox" name="select_<%= i %>" value="<%= dichvuOptions[i].madichvu %>"></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <form action="/dattiec" method="post" onsubmit="addToCart()" >
+          <button type="submit" style="background: #f25287; margin-top: 20px; border-radius: 10px; cursor: pointer; height: 50px; text-align: center;">
+            <div class="TextInTheButton" >Thêm ngay</div>
+          </button>
+        </form>  
+      </div>
+    </div>
+  </div>
+</div>
+<%- include("partials/footer.ejs") %>
+
+
+<script>
+  function addToCart() {
+    // Khởi tạo mảng để lưu thông tin món ăn được chọn
+    let selectedItemsDV = [];
+
+    // Lặp qua các ô input trong bảng món ăn
+    document.querySelectorAll('.tableMA tbody tr').forEach((row, index) => {
+      if (row.querySelector(`input[name="select_${index}"]:checked`)) {
+        
+        const itemName = row.querySelector(`td:nth-child(2)`).textContent;
+        const itemPrice = parseFloat(row.querySelector(`td:nth-child(3)`).textContent);
+        const quantity = parseInt(row.querySelector(`input[name="quantity_${index}"]`).value);
+        const note = row.querySelector(`input[name="note_${index}"]`).value;
+        const totalPrice;
+
+        // Tạo một đối tượng chứa thông và đẩy vào mảng selectedItems
+        selectedItemsDV.push({
+          name: itemName,
+          price: itemPrice,
+          quantity: quantity,
+          note: note,
+          totalPrice: totalPrice
+        });
+      }
+    });
+
+    // Đoạn này để chuyển trang đến /dattiec và gửi mảng selectedItems cùng với request
+    // Chú ý: Ở đây tôi sẽ không sử dụng window.location.href mà sử dụng form submit, vì form này đã được setup để gửi POST request đến /dattiec
+  }
+</script>
