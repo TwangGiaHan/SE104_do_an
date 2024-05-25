@@ -2,16 +2,18 @@ import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
 
-import session from 'express-session';
+import session from "express-session";
 
 const app = express();
 const port = 3000;
 
-app.use(session({
-  secret: 'secret-key',
-  resave: false,
-  saveUninitialized: true
-}));
+app.use(
+  session({
+    secret: "secret-key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 const db = new pg.Client({
   user: "postgres",
@@ -23,9 +25,9 @@ const db = new pg.Client({
 // db.connect();
 db.connect((err) => {
   if (err) {
-    console.error('Không thể kết nối đến cơ sở dữ liệu:', err);
+    console.error("Không thể kết nối đến cơ sở dữ liệu:", err);
   } else {
-    console.log('Kết nối đến cơ sở dữ liệu thành công');
+    console.log("Kết nối đến cơ sở dữ liệu thành công");
     // Bạn có thể thực hiện các thao tác khác tại đây
   }
 });
@@ -41,7 +43,12 @@ app.get("/", (req, res) => {
 // Staff_MainScreen
 
 app.get("/main", async (req, res) => {
-  res.render("user/main.ejs");
+  res.render("user/main.ejs", {
+    hovaten: "Nguyen Van Kha",
+    email: "kha@gmail.com",
+    name: "khanv",
+    sdt: "kha123",
+  });
 });
 
 app.post("/main", async (req, res) => {
@@ -217,9 +224,10 @@ app.post("/dologin", async (req, res) => {
   const matkhau = req.body.password;
 
   try {
-    const result = await db.query("SELECT * FROM NGUOIDUNG WHERE TenDangNhap = $1", [
-      username,
-    ]);
+    const result = await db.query(
+      "SELECT * FROM NGUOIDUNG WHERE TenDangNhap = $1",
+      [username]
+    );
     if (result.rows.length > 0) {
       const user = result.rows[0];
       const dbpassword = user.matkhau;
@@ -265,7 +273,6 @@ app.post("/dosignup", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
 
 app.post("/signup", (req, res) => {
   res.render("login/signup.ejs");
@@ -367,36 +374,6 @@ app.post("/createuser", async (req, res) => {
 
 // user /////////////////////////////////////////////////////////////
 
-app.use(bodyParser.json());
-
-app.set('view engine', 'ejs');
-app.set('views', './views');
-
-app.use(session({
-  secret: 'your_secret_key', // Thay đổi khóa bí mật này
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Đặt là true nếu bạn sử dụng HTTPS
-}));
-
-// app.get('/dattiec', (req, res) => {
-//   const formData = req.session.formData || {};
-//   const caOptions = req.session.caOptions || [];
-//   const sanhOptions = req.session.sanhOptions || [];
-//   const selectedItems = req.session.selectedItems || [];
-//   const selectedItemsDV = req.session.selectedItemsDV || [];
-
-//   res.render('user/dattiec/dattiec', {
-//     formData: formData,
-//     caOptions: caOptions,
-//     sanhOptions: sanhOptions,
-//     selectedItems: selectedItems,
-//     selectedItemsDV: selectedItemsDV,
-//     error: req.session.error || null
-//   });
-// });
-
-
 app.post("/userinfo", async (req, res) => {
   res.render("user/main.ejs");
 });
@@ -411,121 +388,111 @@ app.post("/usertracuu", async (req, res) => {
 
 // Thay đổi thông tin, mật khẩu
 app.post("/changeinfo", async (req, res) => {
-  res.render("user/changeinfo/changeinfo.ejs");
+  const username = req.body.username;
+  console.log(username);
+  res.render("user/changeinfo/changeinfo.ejs", { username: username });
 });
 
 app.post("/changepassword", async (req, res) => {
-  res.render("user/changeinfo/changepassword.ejs");
+  const usernamepass = req.body.usernamepass;
+  res.render("user/changeinfo/changepassword.ejs", {
+    usernamepass: usernamepass,
+  });
 });
 
 app.post("/confirminfochange", async (req, res) => {
-  res.render("user/changeinfo/confirminfochange.ejs");
+  const hovaten = req.body.hovaten;
+  const email = req.body.email;
+  const sdt = req.body.sdt;
+  const username = req.body.username;
+  console.log(username);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(500).send("Email không đúng định dạng");
+  }
+  const phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
+  if (!phoneRegex.test(sdt)) {
+    return res
+      .status(500)
+      .send("Số điện thoại không đúng định dạng của Việt Nam");
+  }
+  try {
+    const result = await db.query(
+      "UPDATE NGUOIDUNG SET tennguoidung = $1, email = $2, sdt = $3 WHERE tendangnhap = $4",
+      [hovaten, email, sdt, username]
+    );
+    console.log(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Internal Server Error");
+  }
+  res.render("user/changeinfo/confirminfochange.ejs", {
+    hovaten: hovaten,
+    email: email,
+    sdt: sdt,
+    username: username,
+  });
 });
 
 app.post("/confirmpasschange", async (req, res) => {
-  res.render("user/changeinfo/confirmpasschange.ejs");
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+  const confirmPassword = req.body.confirmPassword;
+  const usernamepass = req.body.usernamepass;
+  if (newPassword == currentPassword) {
+    return res.status(400).send("New passwords do not match");
+  }
+  if (newPassword !== confirmPassword) {
+    return res
+      .status(400)
+      .send("New passwords and confirmPassword are not the same thing.");
+  }
+  try {
+    const result = await db.query(
+      "SELECT MatKhau FROM NGUOIDUNG WHERE TenDangNhap = $1",
+      [usernamepass]
+    );
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      console.log(user);
+      const dbpassword = user.matkhau;
+      if (currentPassword === dbpassword) {
+        await db.query(
+          "UPDATE NGUOIDUNG SET MatKhau = $1 WHERE TenDangNhap = $2",
+          [newPassword, usernamepass]
+        );
+      } else {
+        return res.status(400).send("Current password is incorrect");
+      }
+    } else {
+      return res.status(400).send("User not found");
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Internal Server Error");
+  }
+  res.render("user/changeinfo/confirmpasschange.ejs", {
+    currentPassword: currentPassword,
+    newPassword: newPassword,
+    confirmPassword: confirmPassword,
+    usernamepass: usernamepass,
+  });
 });
 
+///////////////////////////////////////////////////
 app.post("/logout", async (req, res) => {
   res.render("login/login.ejs");
 });
 
-app.post("/confirminfochange", async (req, res) => {
-  const {hovaten, email, sdt} = req.body;
-  let errors = []
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    errors.push({ msg: "Email không đúng định dạng" });
-  }
-  const phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
-  if (!phoneRegex.test(sdt)) {
-    errors.push({ msg: "Số điện thoại không đúng định dạng của Việt Nam" });
-  }
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
-  }
-
-  const query = `
-    UPDATE NGUOIDUNG 
-    SET TenNguoiDung = $1, Email = $2, SDT = $3 
-    WHERE TenDangNhap = $4
-  `;
+app.get("/dattiec", async (req, res) => {
   try {
-    await db.query(query, [hovaten, email, sdt, req.session.username]);
-    res.redirect('/main');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-app.post("/changepassword", async (req, res) => {
-  const { currentPassword, newPassword, confirmPassword } = req.body;
-  if (newPassword !== confirmPassword) {
-    return res.status(400).send("New passwords do not match");
-  }
-
-  try {
-    const result = await db.query("SELECT MatKhau FROM NGUOIDUNG WHERE TenDangNhap = $1", [req.session.username]);
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      const dbpassword = user.matkhau;
-
-      if (currentPassword === dbpassword) {
-        const updateQuery = "UPDATE NGUOIDUNG SET MatKhau = $1 WHERE TenDangNhap = $2";
-        await db.query(updateQuery, [newPassword, req.session.username]);
-        res.redirect('/main');
-      } else {
-        res.status(400).send("Current password is incorrect");
-      }
-    } else {
-      res.send("User not found");
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-app.post("/main", async (req, res) => {
-  const query = `
-    SELECT TenNguoiDung AS hovaten, Email AS email, SDT AS sdt
-    FROM NGUOIDUNG 
-    WHERE TenDangNhap = $1  
-  `;
-  try {
-    const result = await db.query(query, [req.session.username]);
-    const userInfo = result.rows[0];
-    res.render('user/main.ejs', {
-      hovaten: userInfo.hovaten,
-      email: userInfo.email,
-      sdt: userInfo.sdt
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-app.get('/dattiec', async (req, res) => {
-  // const formData = req.session.formData || {};
-  // const caOptions = req.session.caOptions || [];
-  // const sanhOptions = req.session.sanhOptions || [];
-  // const selectedItems = req.session.selectedItems || [];
-  // const selectedItemsDV = req.session.selectedItemsDV || [];
-
-  // res.render('user/dattiec/dattiec', {
-  //   formData: formData,
-  //   caOptions: caOptions,
-  //   sanhOptions: sanhOptions,
-  //   selectedItems: selectedItems,
-  //   selectedItemsDV: selectedItemsDV,
-  //   error: req.session.error || null
-  // });
-  try {
-    const caResult = await db.query("SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'");
+    const caResult = await db.query(
+      "SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const caOptions = caResult.rows;
-    const sanhResult = await db.query("SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'");
+    const sanhResult = await db.query(
+      "SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const sanhOptions = sanhResult.rows;
     console.log(caOptions);
 
@@ -539,29 +506,33 @@ app.get('/dattiec', async (req, res) => {
       tableQuantity: req.body.tableQuantity,
       deposit: req.body.deposit,
       tableCount: req.body.tableCount,
-      parameter: req.body.parameter
+      parameter: req.body.parameter,
     };
 
     const selectedItems = req.body.selectedItems || [];
-    selectedItems.forEach(item => {
+    selectedItems.forEach((item) => {
       const quantity = parseInt(item.quantity);
       const unitPrice = parseFloat(item.itemPrice);
-      const totalPrice = quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
+      const totalPrice =
+        quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
       item.totalPrice = totalPrice;
     });
 
     const selectedItemsDV = req.body.selectedItemsDV || [];
-    selectedItemsDV.forEach(item => {
+    selectedItemsDV.forEach((item) => {
       const quantityDV = parseInt(item.quantity);
       const unitPriceDV = parseFloat(item.itemPrice);
-      const totalPriceDV = quantityDV * unitPriceDV * (req.body.tableQuantity + req.body.tableCount);
+      const totalPriceDV =
+        quantityDV *
+        unitPriceDV *
+        (req.body.tableQuantity + req.body.tableCount);
       item.totalPriceDV = totalPriceDV;
     });
 
     const ngayDatTiec = new Date();
     if (new Date(req.body.partyDate) < ngayDatTiec || isNaN(req.body.deposit)) {
       req.session.error = "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc";
-      return res.render('user/dattiec/dattiec.ejs');
+      return res.render("user/dattiec/dattiec.ejs");
     }
 
     req.session.formData = formData;
@@ -571,8 +542,8 @@ app.get('/dattiec', async (req, res) => {
     req.session.selectedItemsDV = selectedItemsDV;
     req.session.error = null;
 
-    res.render('user/dattiec/dattiec.ejs', {
-      formData: caOptions
+    res.render("user/dattiec/dattiec.ejs", {
+      formData: caOptions,
     });
   } catch (err) {
     console.error(err);
@@ -580,12 +551,15 @@ app.get('/dattiec', async (req, res) => {
   }
 });
 
-
-app.post('/dattiec', async (req, res) => {
+app.post("/dattiec", async (req, res) => {
   try {
-    const caResult = await db.query("SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'");
+    const caResult = await db.query(
+      "SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const caOptions = caResult.rows;
-    const sanhResult = await db.query("SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'");
+    const sanhResult = await db.query(
+      "SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const sanhOptions = sanhResult.rows;
     console.log(caOptions);
 
@@ -599,29 +573,33 @@ app.post('/dattiec', async (req, res) => {
       tableQuantity: req.body.tableQuantity,
       deposit: req.body.deposit,
       tableCount: req.body.tableCount,
-      parameter: req.body.parameter
+      parameter: req.body.parameter,
     };
 
     const selectedItems = req.body.selectedItems || [];
-    selectedItems.forEach(item => {
+    selectedItems.forEach((item) => {
       const quantity = parseInt(item.quantity);
       const unitPrice = parseFloat(item.itemPrice);
-      const totalPrice = quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
+      const totalPrice =
+        quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
       item.totalPrice = totalPrice;
     });
 
     const selectedItemsDV = req.body.selectedItemsDV || [];
-    selectedItemsDV.forEach(item => {
+    selectedItemsDV.forEach((item) => {
       const quantityDV = parseInt(item.quantity);
       const unitPriceDV = parseFloat(item.itemPrice);
-      const totalPriceDV = quantityDV * unitPriceDV * (req.body.tableQuantity + req.body.tableCount);
+      const totalPriceDV =
+        quantityDV *
+        unitPriceDV *
+        (req.body.tableQuantity + req.body.tableCount);
       item.totalPriceDV = totalPriceDV;
     });
 
     const ngayDatTiec = new Date();
     if (new Date(req.body.partyDate) < ngayDatTiec || isNaN(req.body.deposit)) {
       req.session.error = "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc";
-      return res.redirect('/dattiec');
+      return res.redirect("/dattiec");
     }
 
     req.session.formData = formData;
@@ -631,18 +609,19 @@ app.post('/dattiec', async (req, res) => {
     req.session.selectedItemsDV = selectedItemsDV;
     req.session.error = null;
 
-    res.redirect('/dattiec');
+    res.redirect("/dattiec");
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
   }
 });
-
 
 app.post("/userthemmonan", async (req, res) => {
   try {
     // Truy vấn cơ sở dữ liệu để lấy danh sách món ăn còn phục vụ từ bảng MONAN
-    const monanResult = await db.query("SELECT * FROM MONAN WHERE TinhTrang = 'Còn phục vụ'");
+    const monanResult = await db.query(
+      "SELECT * FROM MONAN WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const monanOptions = monanResult.rows;
     // Render màn hình themmonan và truyền danh sách món ăn
     res.render("user/dattiec/themmonan.ejs", { monanOptions: monanOptions });
@@ -654,7 +633,9 @@ app.post("/userthemmonan", async (req, res) => {
 
 app.post("/userthemdichvu", async (req, res) => {
   try {
-    const dichvuResult = await db.query("SELECT * FROM DICHVU WHERE TinhTrang = 'Còn phục vụ'");
+    const dichvuResult = await db.query(
+      "SELECT * FROM DICHVU WHERE TinhTrang = 'Còn phục vụ'"
+    );
     const dichvuOptions = dichvuResult.rows;
     res.render("user/dattiec/themdichvu.ejs", { dichvuOptions: dichvuOptions });
   } catch (err) {
@@ -675,7 +656,7 @@ app.post("/userxoamonan", async (req, res) => {
 
 app.post("/userxoamonan", async (req, res) => {
   const itemId = req.body.itemId;
-  const confirm = req.body.confirm; 
+  const confirm = req.body.confirm;
 
   if (confirm === "yes") {
     const indexToRemove = selectedItems.findIndex((item) => item.id === itemId);
@@ -697,13 +678,14 @@ app.post("/userxoamonan", async (req, res) => {
   }
 });
 
-
 app.post("/userxoadichvu", async (req, res) => {
   const itemId = req.body.itemId;
   const confirmDV = req.body.confirmDV;
 
   if (confirmDV === "yes") {
-    const indexToRemove = selectedItemsDV.findIndex((item) => item.id === itemId);
+    const indexToRemove = selectedItemsDV.findIndex(
+      (item) => item.id === itemId
+    );
     if (indexToRemove !== -1) {
       selectedItemsDV.splice(indexToRemove, 1);
       res.render("user/dattiec/dattiec.ejs", {
@@ -730,16 +712,25 @@ app.post("/xacnhandattiec", async (req, res) => {
     const selectedItems = req.session.selectedItems;
     const selectedItemsDV = req.session.selectedItemsDV;
 
-    const donGiaBanResult = await db.query("SELECT DonGiaBanToiThieu FROM LOAISANH ls JOIN SANH s ON s.MaLoaiSanh = ls.MaLoaiSanh WHERE s.TenSanh = $1", [formData.sanh]);
+    const donGiaBanResult = await db.query(
+      "SELECT DonGiaBanToiThieu FROM LOAISANH ls JOIN SANH s ON s.MaLoaiSanh = ls.MaLoaiSanh WHERE s.TenSanh = $1",
+      [formData.sanh]
+    );
     const donGiaBan = donGiaBanResult.rows[0].dongiabantoithieu;
 
-    const masanhResult = await db.query("SELECT MaSanh FROM SANH WHERE TenSanh = $1", [formData.sanh]);
+    const masanhResult = await db.query(
+      "SELECT MaSanh FROM SANH WHERE TenSanh = $1",
+      [formData.sanh]
+    );
     const masanh = masanhResult.rows[0].masanh;
 
-    const macaResult  = await db.query("SELECT MaCa FROM CA WHERE TenCa = $1", [formData.ca]);
+    const macaResult = await db.query("SELECT MaCa FROM CA WHERE TenCa = $1", [
+      formData.ca,
+    ]);
     const maca = macaResult.rows[0].maca;
 
-    const tongTienBan = donGiaBan * (formData.tableQuantity + formData.tableCount);
+    const tongTienBan =
+      donGiaBan * (formData.tableQuantity + formData.tableCount);
     const ngayDatTiec = new Date();
     // INSERT into PHIEUDATTIEC
     const insertPhieuQuery = `
@@ -759,13 +750,10 @@ app.post("/xacnhandattiec", async (req, res) => {
       formData.tableQuantity,
       formData.tableCount,
       donGiaBan,
-      tongTienBan
+      tongTienBan,
     ];
     const phieuResult = await db.query(insertPhieuQuery, valuesPhieu);
     const maPhieu = phieuResult.rows[0].maphieu;
-
-
-
   }
 });
 

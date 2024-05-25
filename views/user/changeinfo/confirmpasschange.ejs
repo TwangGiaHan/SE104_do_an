@@ -6,19 +6,34 @@
       <div class="textandinput">
         <div>Mật khẩu hiện tại</div>
         <div>
-          <input class="enter"  name="currentPassword"/>
+          <input
+            class="enter"
+            name="currentPassword"
+            value="<%= currentPassword %>"
+            readonly
+          />
         </div>
       </div>
       <div class="textandinput">
         <div>Mật khẩu mới</div>
         <div>
-          <input class="enter" name="newPassword" />
+          <input
+            class="enter"
+            name="newPassword"
+            value="<%= newPassword %>"
+            readonly
+          />
         </div>
       </div>
       <div class="textandinput">
-        <div>Mật khẩu mới</div>
+        <div>Xác nhận mật khẩu mới</div>
         <div>
-          <input class="enter" name="confirmPassword" />
+          <input
+            class="enter"
+            name="confirmPassword"
+            value="<%= confirmPassword %>"
+            readonly
+          />
         </div>
       </div>
     </div>

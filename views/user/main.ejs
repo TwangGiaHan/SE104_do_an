@@ -32,17 +32,26 @@
     </div>
 
     <form action="/changeinfo" method="POST">
-      <button type="submit" style = "margin: 10px;">
+      <button
+        type="submit"
+        name="username"
+        value="<%if(locals.name){%><%=name%><%}%>"
+        style="margin: 10px"
+      >
         <div class="TextInTheButton">THAY ĐỔI THÔNG TIN</div>
       </button>
     </form>
 
     <form action="/changepassword" method="POST">
-      <button type="submit" style = "margin: 20px;">
+      <button
+        type="submit"
+        name="usernamepass"
+        value="<%if(locals.name){%><%=name%><%}%>"
+        style="margin: 20px"
+      >
         <div class="TextInTheButton">THAY ĐỔI MẬT KHẨU</div>
       </button>
     </form>
-
   </div>
 </div>
 <%- include("partials/footer.ejs") %>
