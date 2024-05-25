@@ -34,6 +34,7 @@
     <form action="/changeinfo" method="POST">
       <button
         type="submit"
+        class="confirm"
         name="username"
         value="<%if(locals.name){%><%=name%><%}%>"
         style="margin: 10px"
@@ -45,6 +46,8 @@
     <form action="/changepassword" method="POST">
       <button
         type="submit"
+        class="confirm"
+        class="headertext"
         name="usernamepass"
         value="<%if(locals.name){%><%=name%><%}%>"
         style="margin: 20px"
