@@ -6,33 +6,41 @@
       <div class="textandinput">
         <div>Tên chú rể</div>
         <div>
-          <input class="enter" name="groomName " required/>
-        </div>
+          <input class="enter" name="groomName" value="<%= formData.groomName || '' %>" required/>        </div>
       </div>
       <div class="textandinput">
         <div>Ca</div>
         <div>
-          <select class="enter" name = "ca" required>
-              <option value="" disabled selected hidden>Chọn ca</option>
-              <% for (const ca of caOptions) { %>
-                <option value="<%= ca.tenca%>"><%= ca.tenca %> (<%=ca.giobatdau %> - <%=ca.gioketthuc  %>)</option>
-              <% } %>
+          <select class="enter" name="ca" required>
+            <% if (formData.ca) { %>
+              <!-- Hiển thị tên ca nếu có giá trị trong formData -->
+              <option value="<%= formData.ca %>" selected><%= formData.ca %></option>
+            <% } else { %>
+              <!-- Option mặc định "Chọn ca" -->
+              <option value="" disabled selected hidden>Chọn ca </option>
+            <% } %>
+            <!-- Hiển thị các option từ danh sách caOptions -->
+            <% for (const ca of caOptions) { %>
+              <option value="<%= ca.tenca%>"><%= ca.tenca %> (<%= ca.giobatdau %> - <%= ca.gioketthuc %>)</option>
+            <% } %>
           </select>
         </div>
       </div>
       <div class="textandinput">
         <div>Tên cô dâu</div>
         <div>
-          <input class="enter" name="brideName" required/>
+          <input class="enter" name="brideName" value="<%= formData.brideName || '' %>" required/>
         </div>
       </div>
       <div class="textandinput">
         <div>Sảnh</div>
         <div>
-          <select class="enter" required>
+          <select class="enter" name="sanh" required>
             <option value="" disabled selected hidden>Chọn sảnh</option>
             <% for (const sanh of sanhOptions) { %>
-              <option value="<%= sanh.tensanh  %>"><%= sanh.tensanh  %></option>
+              <option value="<%= sanh.tensanh %>" <%= formData.sanh === sanh.tensanh ? 'selected' : '' %>>
+                <%= sanh.tensanh %>
+              </option>
             <% } %>
           </select>
         </div>
@@ -44,6 +52,7 @@
             class="enter" 
             type="tel"
             name="phone"
+            value="<%= formData.phone || '' %>" required
           />
         </div>
       </div>
@@ -54,6 +63,7 @@
             class="enter" 
             type="number" min="1"
             name="tableQuantity"
+            value="<%= formData.tableQuantity || '' %>" required
           />
         </div>
       </div>
@@ -64,6 +74,7 @@
             class="enter" 
             type="date"  
             name="partyDate"
+            value="<%= formData.partyDate || '' %>" required
           />
         </div>
       </div>
@@ -74,6 +85,7 @@
             class="enter" 
             type="number" min="1"
             name="deposit"
+            value="<%= formData.deposit || '' %>" required
           />
         </div>
       </div>
@@ -84,6 +96,7 @@
             class="enter" 
             type="number" min="1"
             name="tableCount"
+            value="<%= formData.tableCount || '' %>" required
           />
         </div>
       </div>
@@ -94,6 +107,7 @@
             class="enter" 
             type="number" step="0.01"
             name="parameter"
+            value="<%= formData.parameter || '' %>" required
           />
         </div>
       </div>

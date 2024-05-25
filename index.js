@@ -1,10 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
-// import { check, validationResult } from "express-validator"; // thêm
+
+import session from 'express-session';
 
 const app = express();
 const port = 3000;
+
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
 
 const db = new pg.Client({
   user: "postgres",
@@ -358,26 +365,36 @@ app.post("/createuser", async (req, res) => {
   res.render("admin/createuser.ejs");
 });
 
-// user
+// user /////////////////////////////////////////////////////////////
+
+app.use(bodyParser.json());
+
 app.set('view engine', 'ejs');
 app.set('views', './views');
 
-app.get('/dattiec', (req, res) => {
-  const formData = req.session.formData || {};
-  const caOptions = req.session.caOptions || [];
-  const sanhOptions = req.session.sanhOptions || [];
-  const selectedItems = req.session.selectedItems || [];
-  const selectedItemsDV = req.session.selectedItemsDV || [];
+app.use(session({
+  secret: 'your_secret_key', // Thay đổi khóa bí mật này
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // Đặt là true nếu bạn sử dụng HTTPS
+}));
 
-  res.render('user/dattiec/dattiec', {
-    formData: formData,
-    caOptions: caOptions,
-    sanhOptions: sanhOptions,
-    selectedItems: selectedItems,
-    selectedItemsDV: selectedItemsDV,
-    error: req.session.error || null
-  });
-});
+// app.get('/dattiec', (req, res) => {
+//   const formData = req.session.formData || {};
+//   const caOptions = req.session.caOptions || [];
+//   const sanhOptions = req.session.sanhOptions || [];
+//   const selectedItems = req.session.selectedItems || [];
+//   const selectedItemsDV = req.session.selectedItemsDV || [];
+
+//   res.render('user/dattiec/dattiec', {
+//     formData: formData,
+//     caOptions: caOptions,
+//     sanhOptions: sanhOptions,
+//     selectedItems: selectedItems,
+//     selectedItemsDV: selectedItemsDV,
+//     error: req.session.error || null
+//   });
+// });
 
 
 app.post("/userinfo", async (req, res) => {
@@ -386,10 +403,6 @@ app.post("/userinfo", async (req, res) => {
 
 app.post("/userdichvu", async (req, res) => {
   res.render("user/dattiec/XoaDichVu.ejs");
-});
-
-app.post("/xacnhandattiec", async (req, res) => {
-  res.render("user/dattiec/XacNhanDatTiec.ejs");
 });
 
 app.post("/usertracuu", async (req, res) => {
@@ -494,61 +507,131 @@ app.post("/main", async (req, res) => {
   }
 });
 
-app.post("/dattiec", async (req, res) => {
-  const groomName = req.body.groomName;
-  const brideName = req.body.brideName;
-  const ca = req.body.ca;
-  const ngayDaiTiec = req.body.partyDate;
-  const sanh = req.body.sanh;
-  const phone = req.body.phone;
-  const slban = req.body.tableQuantity;
-  const tiendatdoc = req.body.deposit;
-  const bandutru = req.body.tableCount;
-  const thamso = req.body.parameter;
+app.get('/dattiec', async (req, res) => {
+  // const formData = req.session.formData || {};
+  // const caOptions = req.session.caOptions || [];
+  // const sanhOptions = req.session.sanhOptions || [];
+  // const selectedItems = req.session.selectedItems || [];
+  // const selectedItemsDV = req.session.selectedItemsDV || [];
 
+  // res.render('user/dattiec/dattiec', {
+  //   formData: formData,
+  //   caOptions: caOptions,
+  //   sanhOptions: sanhOptions,
+  //   selectedItems: selectedItems,
+  //   selectedItemsDV: selectedItemsDV,
+  //   error: req.session.error || null
+  // });
   try {
-    // Truy vấn lấy thông tin về ca
     const caResult = await db.query("SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'");
     const caOptions = caResult.rows;
-
-    // Truy vấn lấy thông tin về sảnh
     const sanhResult = await db.query("SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'");
     const sanhOptions = sanhResult.rows;
+    console.log(caOptions);
 
-    // Tính toán thông tin món ăn
+    const formData = {
+      groomName: req.body.groomName,
+      brideName: req.body.brideName,
+      ca: req.body.ca,
+      partyDate: req.body.partyDate,
+      sanh: req.body.sanh,
+      phone: req.body.phone,
+      tableQuantity: req.body.tableQuantity,
+      deposit: req.body.deposit,
+      tableCount: req.body.tableCount,
+      parameter: req.body.parameter
+    };
+
     const selectedItems = req.body.selectedItems || [];
     selectedItems.forEach(item => {
       const quantity = parseInt(item.quantity);
       const unitPrice = parseFloat(item.itemPrice);
-      const totalPrice = quantity  * unitPrice * (slban + bandutru);
+      const totalPrice = quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
       item.totalPrice = totalPrice;
     });
 
-    // Tính toán thông tin dịch vụ từ selectedItemsDV
     const selectedItemsDV = req.body.selectedItemsDV || [];
     selectedItemsDV.forEach(item => {
       const quantityDV = parseInt(item.quantity);
       const unitPriceDV = parseFloat(item.itemPrice);
-      const totalPriceDV = quantityDV * unitPriceDV * (slban + bandutru);
+      const totalPriceDV = quantityDV * unitPriceDV * (req.body.tableQuantity + req.body.tableCount);
       item.totalPriceDV = totalPriceDV;
     });
 
-    const ngayDatTiec = new Date(); // Ngày đặt tiệc là ngày hiện tại
-    if (ngayDaiTiec < ngayDatTiec || isNaN(tiendatdoc) || tiendatdoc < 0) {
-      return res.render("user/dattiec/dattiec.ejs", { 
-        caOptions: caOptions, 
-        sanhOptions: sanhOptions,
-        error: "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc và tiền đặt cọc phải là một số dương"
-      });
+    const ngayDatTiec = new Date();
+    if (new Date(req.body.partyDate) < ngayDatTiec || isNaN(req.body.deposit)) {
+      req.session.error = "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc";
+      return res.render('user/dattiec/dattiec.ejs');
     }
 
-    // Render màn hình đặt tiệc cưới và truyền các tùy chọn ca và sảnh
-    res.render("user/dattiec/dattiec.ejs", { 
-      caOptions: caOptions, 
-      sanhOptions: sanhOptions,
-      selectedItems: selectedItems,
-      selectedItemsDV: selectedItemsDV
+    req.session.formData = formData;
+    req.session.caOptions = caOptions;
+    req.session.sanhOptions = sanhOptions;
+    req.session.selectedItems = selectedItems;
+    req.session.selectedItemsDV = selectedItemsDV;
+    req.session.error = null;
+
+    res.render('user/dattiec/dattiec.ejs', {
+      formData: caOptions
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+
+app.post('/dattiec', async (req, res) => {
+  try {
+    const caResult = await db.query("SELECT TenCa, GioBatDau, GioKetThuc FROM CA WHERE TinhTrang = 'Còn phục vụ'");
+    const caOptions = caResult.rows;
+    const sanhResult = await db.query("SELECT TenSanh FROM SANH WHERE TinhTrang = 'Còn phục vụ'");
+    const sanhOptions = sanhResult.rows;
+    console.log(caOptions);
+
+    const formData = {
+      groomName: req.body.groomName,
+      brideName: req.body.brideName,
+      ca: req.body.ca,
+      partyDate: req.body.partyDate,
+      sanh: req.body.sanh,
+      phone: req.body.phone,
+      tableQuantity: req.body.tableQuantity,
+      deposit: req.body.deposit,
+      tableCount: req.body.tableCount,
+      parameter: req.body.parameter
+    };
+
+    const selectedItems = req.body.selectedItems || [];
+    selectedItems.forEach(item => {
+      const quantity = parseInt(item.quantity);
+      const unitPrice = parseFloat(item.itemPrice);
+      const totalPrice = quantity * unitPrice * (req.body.tableQuantity + req.body.tableCount);
+      item.totalPrice = totalPrice;
+    });
+
+    const selectedItemsDV = req.body.selectedItemsDV || [];
+    selectedItemsDV.forEach(item => {
+      const quantityDV = parseInt(item.quantity);
+      const unitPriceDV = parseFloat(item.itemPrice);
+      const totalPriceDV = quantityDV * unitPriceDV * (req.body.tableQuantity + req.body.tableCount);
+      item.totalPriceDV = totalPriceDV;
+    });
+
+    const ngayDatTiec = new Date();
+    if (new Date(req.body.partyDate) < ngayDatTiec || isNaN(req.body.deposit)) {
+      req.session.error = "Ngày đãi tiệc phải lớn hơn ngày đặt tiệc";
+      return res.redirect('/dattiec');
+    }
+
+    req.session.formData = formData;
+    req.session.caOptions = caOptions;
+    req.session.sanhOptions = sanhOptions;
+    req.session.selectedItems = selectedItems;
+    req.session.selectedItemsDV = selectedItemsDV;
+    req.session.error = null;
+
+    res.redirect('/dattiec');
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -590,6 +673,101 @@ app.post("/userxoamonan", async (req, res) => {
   res.render("user/dattiec/XoaMonAn.ejs");
 });
 
+app.post("/userxoamonan", async (req, res) => {
+  const itemId = req.body.itemId;
+  const confirm = req.body.confirm; 
+
+  if (confirm === "yes") {
+    const indexToRemove = selectedItems.findIndex((item) => item.id === itemId);
+    if (indexToRemove !== -1) {
+      selectedItems.splice(indexToRemove, 1);
+      res.render("user/dattiec/dattiec.ejs", {
+        caOptions: caOptions,
+        sanhOptions: sanhOptions,
+        selectedItems: selectedItems,
+        selectedItemsDV: selectedItemsDV,
+        formData: req.body, // Truyền lại formData nếu cần
+      });
+    } else {
+      res.status(404).send("Món ăn không tồn tại trong danh sách.");
+    }
+  } else {
+    // Nếu người dùng không xác nhận xóa, quay lại trang /dattiec mà không thực hiện bất kỳ hành động nào
+    res.redirect("/dattiec");
+  }
+});
+
+
+app.post("/userxoadichvu", async (req, res) => {
+  const itemId = req.body.itemId;
+  const confirmDV = req.body.confirmDV;
+
+  if (confirmDV === "yes") {
+    const indexToRemove = selectedItemsDV.findIndex((item) => item.id === itemId);
+    if (indexToRemove !== -1) {
+      selectedItemsDV.splice(indexToRemove, 1);
+      res.render("user/dattiec/dattiec.ejs", {
+        caOptions: caOptions,
+        sanhOptions: sanhOptions,
+        selectedItems: selectedItems,
+        selectedItemsDV: selectedItemsDV,
+        formData: req.body, // Truyền lại formData nếu cần
+      });
+    } else {
+      res.status(404).send("Dịch vụ không tồn tại trong danh sách.");
+    }
+  } else {
+    // Nếu người dùng không xác nhận xóa, quay lại trang /dattiec mà không thực hiện bất kỳ hành động nào
+    res.redirect("/dattiec");
+  }
+});
+
+app.post("/xacnhandattiec", async (req, res) => {
+  const confirmDT = req.body.confirmDT;
+
+  if (confirmDT === "yes") {
+    const formData = req.session.formData;
+    const selectedItems = req.session.selectedItems;
+    const selectedItemsDV = req.session.selectedItemsDV;
+
+    const donGiaBanResult = await db.query("SELECT DonGiaBanToiThieu FROM LOAISANH ls JOIN SANH s ON s.MaLoaiSanh = ls.MaLoaiSanh WHERE s.TenSanh = $1", [formData.sanh]);
+    const donGiaBan = donGiaBanResult.rows[0].dongiabantoithieu;
+
+    const masanhResult = await db.query("SELECT MaSanh FROM SANH WHERE TenSanh = $1", [formData.sanh]);
+    const masanh = masanhResult.rows[0].masanh;
+
+    const macaResult  = await db.query("SELECT MaCa FROM CA WHERE TenCa = $1", [formData.ca]);
+    const maca = macaResult.rows[0].maca;
+
+    const tongTienBan = donGiaBan * (formData.tableQuantity + formData.tableCount);
+    const ngayDatTiec = new Date();
+    // INSERT into PHIEUDATTIEC
+    const insertPhieuQuery = `
+      INSERT INTO PHIEUDATTIEC (TenChuRe, TenCoDau, SDT, NgayDatTiec, NgayDaiTiec, MaSanh, MaCa, TienDatCoc, SoLuongBan, SoBanDuTru, DonGiaBan, TongTienBan)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING MaPhieu
+    `;
+    const valuesPhieu = [
+      formData.groomName,
+      formData.brideName,
+      formData.phone,
+      ngayDatTiec,
+      formData.partyDate,
+      masanh,
+      maca,
+      formData.deposit,
+      formData.tableQuantity,
+      formData.tableCount,
+      donGiaBan,
+      tongTienBan
+    ];
+    const phieuResult = await db.query(insertPhieuQuery, valuesPhieu);
+    const maPhieu = phieuResult.rows[0].maphieu;
+
+
+
+  }
+});
 
 app.listen(port, () => {
   console.log("listening on port " + port);
